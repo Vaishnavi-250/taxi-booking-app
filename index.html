@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Taxi Booking App</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <h1>Taxi Booking App</h1>
+    <p class="status">Book faster, track clearly, pay securely, rate confidently.</p>
+    <div id="toastContainer" class="toast-container"></div>
+
+    <section id="auth" class="section-card">
+      <h2>Login / Register</h2>
+      <input type="text" id="authUsername" placeholder="Username" />
+      <input type="password" id="authPassword" placeholder="Password" />
+      <button id="loginBtn">Login</button>
+      <button id="registerBtn" class="secondary">Register</button>
+      <div id="authStatus" class="status"></div>
+    </section>
+
+    <section id="adminDashboard" class="section-card" hidden>
+      <h2>Admin Dashboard</h2>
+      <button id="refreshAdminRides" class="secondary">Refresh Admin Ride List</button>
+      <ul id="adminRides"></ul>
+    </section>
+
+    <div class="card-row">
+      <div class="section-card">
+        <h2>Quick Actions</h2>
+        <button class="secondary" id="refreshDrivers">Refresh Drivers</button>
+        <button class="secondary" id="pickNearest">Pick Nearest Driver</button>
+      </div>
+      <div class="section-card">
+        <h2>Ride Status</h2>
+        <div id="rideState">No active booking.</div>
+      </div>
+    </div>
+
+    <section id="book" class="section-card">
+      <h2>Book a Ride</h2>
+      <div class="autocomplete-box">
+        <input type="text" id="pickup" placeholder="Pickup location" autocomplete="off" />
+        <div id="pickupSuggestions" class="suggestions" hidden></div>
+      </div>
+      <div class="autocomplete-box">
+        <input type="text" id="dropoff" placeholder="Dropoff location" autocomplete="off" />
+        <div id="dropoffSuggestions" class="suggestions" hidden></div>
+      </div>
+      <button id="estimate">Get Fare Estimate</button>
+      <button id="bookRide">Book Ride</button>
+      <div id="estimateResult" class="status"></div>
+      <div id="bookingResult" class="status"></div>
+    </section>
+
+    <section id="track" class="section-card">
+      <h2>Live Driver Tracking</h2>
+      <div id="map" style="height: 350px; border-radius: 10px; border: 1px solid #cdd7e7; margin-bottom: 0.7rem"></div>
+      <div id="routeInfo" class="status">No route selected.</div>
+      <ul id="drivers"></ul>
+      <div id="liveTrack"></div>
+    </section>
+
+    <section id="payment" class="section-card">
+      <h2>Payment</h2>
+      <select id="paymentMethod">
+        <option value="card">Card (Stripe style)</option>
+        <option value="upi">UPI</option>
+        <option value="wallet">Wallet</option>
+      </select>
+      <input type="text" id="paymentAmount" readonly placeholder="Amount (auto)" />
+      <button id="payButton">Pay Now</button>
+      <div id="paymentResult" class="status"></div>
+    </section>
+
+    <section id="history" class="section-card">
+      <h2>Ride History</h2>
+      <button id="refreshHistory" class="secondary">Refresh History</button>
+      <ul id="rideHistory"></ul>
+    </section>
+
+    <section id="rate" class="section-card">
+      <h2>Rate Driver</h2>
+      <input type="number" id="rideId" placeholder="Ride ID" />
+      <input type="number" id="driverId" placeholder="Driver ID" />
+      <input type="number" id="rating" min="1" max="5" placeholder="Rating (1-5)" />
+      <input type="text" id="comment" placeholder="Comment" />
+      <button id="submitRating">Send Rating</button>
+      <div id="ratingResult" class="status"></div>
+    </section>
+
+    <section id="locale" class="section-card">
+      <h2>Language</h2>
+      <select id="language">
+        <option value="en">English</option>
+        <option value="hi">Hindi</option>
+        <option value="kn">Kannada</option>
+      </select>
+      <p id="greeting"></p>
+      <h2>Display Mode</h2>
+      <button id="themeToggle" class="secondary">Toggle Dark Mode</button>
+    </section>
+  </div>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-sA+4qNBW+g8fXh1YH7EihH2L0gSpxXZx0tygZg6vTQo=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-o9N1j7kYH3+g5y7vngBsR6s1eS6yL8VtKhVw0e7x0u0=" crossorigin=""></script>
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
