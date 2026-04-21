@@ -36,6 +36,7 @@
       <div class="section-card">
         <h2>Ride Status</h2>
         <div id="rideState">No active booking.</div>
+        <button id="cancelRide" class="secondary" hidden>Cancel Ride</button>
       </div>
     </div>
 
@@ -70,6 +71,11 @@
         <option value="upi">UPI</option>
         <option value="wallet">Wallet</option>
       </select>
+      <div id="cardForm" style="display: none; margin-top: 0.5rem;">
+        <input type="text" id="cardNumber" placeholder="Card Number (demo)" style="width: 100%; margin-bottom: 0.5rem;" />
+        <input type="text" id="expiry" placeholder="MM/YY" style="width: 48%; margin-right: 4%;" />
+        <input type="text" id="cvc" placeholder="CVC" style="width: 48%;" />
+      </div>
       <input type="text" id="paymentAmount" readonly placeholder="Amount (auto)" />
       <button id="payButton">Pay Now</button>
       <div id="paymentResult" class="status"></div>
@@ -91,12 +97,31 @@
       <div id="ratingResult" class="status"></div>
     </section>
 
+    <section id="profile" class="section-card" hidden>
+      <h2>Profile</h2>
+      <div id="profileInfo"></div>
+      <h3>Settings</h3>
+      <label>Language: 
+        <select id="profileLanguage">
+          <option value="en">English</option>
+          <option value="hi">Hindi</option>
+          <option value="kn">Kannada</option>
+          <option value="ta">Tamil</option>
+        </select>
+      </label>
+      <br>
+      <button id="toggleTheme" class="secondary">Toggle Dark Mode</button>
+      <br>
+      <label><input type="checkbox" id="enableNotifications" /> Enable Browser Notifications</label>
+    </section>
+
     <section id="locale" class="section-card">
       <h2>Language</h2>
       <select id="language">
         <option value="en">English</option>
         <option value="hi">Hindi</option>
         <option value="kn">Kannada</option>
+        <option value="ta">Tamil</option>
       </select>
       <p id="greeting"></p>
       <h2>Display Mode</h2>

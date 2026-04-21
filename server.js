@@ -77,8 +77,29 @@ const localRatings = [];
 const drivers = [
   { id: 1, name: 'Priya', car: 'Toyota', plate: 'KA01AB1234', lat: 12.9716, lng: 77.5946 },
   { id: 2, name: 'Amit', car: 'Honda', plate: 'KA01CD5678', lat: 12.9750, lng: 77.5990 },
-  { id: 3, name: 'Salma', car: 'Suzuki', plate: 'KA01EF9999', lat: 12.9690, lng: 77.5900 }
+  { id: 3, name: 'Salma', car: 'Suzuki', plate: 'KA01EF9999', lat: 12.9690, lng: 77.5900 },
+  { id: 4, name: 'Rajesh', car: 'Hyundai', plate: 'KA01GH1111', lat: 12.9730, lng: 77.5960 },
+  { id: 5, name: 'Kavita', car: 'Maruti', plate: 'KA01IJ2222', lat: 12.9700, lng: 77.5920 },
+  { id: 6, name: 'Vikram', car: 'Tata', plate: 'KA01KL3333', lat: 12.9770, lng: 77.6010 },
+  { id: 7, name: 'Anjali', car: 'Mahindra', plate: 'KA01MN4444', lat: 12.9680, lng: 77.5880 },
+  { id: 8, name: 'Suresh', car: 'Ford', plate: 'KA01OP5555', lat: 12.9740, lng: 77.5970 },
+  { id: 9, name: 'Meera', car: 'Nissan', plate: 'KA01QR6666', lat: 12.9720, lng: 77.5930 },
+  { id: 10, name: 'Arjun', car: 'BMW', plate: 'KA01ST7777', lat: 12.9760, lng: 77.6000 }
 ];
+
+const pickupDropoffCoords = (location) => {
+  const key = location.trim().toLowerCase();
+  if (key.includes('airport')) return [12.9558, 77.6650];
+  if (key.includes('station')) return [12.9780, 77.5713];
+  if (key.includes('mall')) return [12.9758, 77.6050];
+  if (key.includes('home')) return [12.9716, 77.5946];
+  if (key.includes('office')) return [12.9718, 77.6413];
+  return [12.9716 + (Math.random() - 0.5) * 0.03, 77.5946 + (Math.random() - 0.5) * 0.03];
+};
+
+const getDistance = (lat1, lng1, lat2, lng2) => {
+  return Math.sqrt(Math.pow(lat1 - lat2, 2) + Math.pow(lng1 - lng2, 2));
+};
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-key';
 
@@ -164,8 +185,9 @@ app.get('/fare-estimate', (req, res) => {
   if (!pickup || !dropoff) return res.status(400).json({ error: 'pickup and dropoff required' });
   const base = 50;
   const distanceKm = 6.5;
-  const total = base + distanceKm * 14;
-  res.json({ pickup, dropoff, distance_km: distanceKm, fare: (Math.round(total * 100) / 100) });
+  const surge = Math.random() > 0.8 ? 1.5 : 1; // 20% chance of surge
+  const total = (base + distanceKm * 14) * surge;
+  res.json({ pickup, dropoff, distance_km: distanceKm, fare: (Math.round(total * 100) / 100), surge: surge > 1 });
 });
 
 app.get('/route', async (req, res) => {
@@ -196,9 +218,18 @@ app.post('/book', authMiddleware, async (req, res) => {
   const user = req.user.username;
   if (!user || !pickup || !dropoff) return res.status(400).json({ error: 'user, pickup, dropoff required' });
 
+  const pickupCoords = pickupDropoffCoords(pickup);
+  let minDist = Infinity;
+  let selectedDriver = drivers[0];
+  drivers.forEach(d => {
+    const dist = getDistance(pickupCoords[0], pickupCoords[1], d.lat, d.lng);
+    if (dist < minDist) {
+      minDist = dist;
+      selectedDriver = d;
+    }
+  });
+
   const rideId = Date.now();
-  const idx = rideId % drivers.length;
-  const selectedDriver = drivers[idx];
 
   const ride = new Ride({
     rideId,
@@ -221,9 +252,91 @@ app.post('/book', authMiddleware, async (req, res) => {
     const rideRes = { id: rideId, user, pickup, dropoff, status: 'Accepted', driver: selectedDriver };
     io.emit('ride-booked', rideRes);
     res.json({ success: true, ride: rideRes });
+
+    console.log(`Email/SMS notification: Ride ${rideId} booked for user ${user} with driver ${selectedDriver.name}`);
+
+    // Simulate status updates
+    setTimeout(async () => {
+      try {
+        if (useMongo) {
+          await Ride.findOneAndUpdate({ rideId }, { status: 'Driver Arriving' });
+        } else {
+          const ride = localRides.find(r => r.rideId == rideId);
+          if (ride) ride.status = 'Driver Arriving';
+        }
+        io.emit('ride-status-update', { rideId, status: 'Driver Arriving' });
+        console.log(`SMS notification: Ride ${rideId} status updated to Driver Arriving`);
+      } catch (err) {
+        console.error('update status error', err);
+      }
+    }, 10000);
+
+    setTimeout(async () => {
+      try {
+        if (useMongo) {
+          await Ride.findOneAndUpdate({ rideId }, { status: 'In Transit' });
+        } else {
+          const ride = localRides.find(r => r.rideId == rideId);
+          if (ride) ride.status = 'In Transit';
+        }
+        io.emit('ride-status-update', { rideId, status: 'In Transit' });
+        console.log(`SMS notification: Ride ${rideId} status updated to In Transit`);
+      } catch (err) {
+        console.error('update status error', err);
+      }
+    }, 20000);
+
+    setTimeout(async () => {
+      try {
+        if (useMongo) {
+          await Ride.findOneAndUpdate({ rideId }, { status: 'Completed' });
+        } else {
+          const ride = localRides.find(r => r.rideId == rideId);
+          if (ride) ride.status = 'Completed';
+        }
+        io.emit('ride-status-update', { rideId, status: 'Completed' });
+        console.log(`Email notification: Ride ${rideId} completed`);
+      } catch (err) {
+        console.error('update status error', err);
+      }
+    }, 30000);
   } catch (err) {
     console.error('save ride error', err);
     res.status(500).json({ success: false, error: 'Failed to save ride' });
+  }
+});
+
+app.post('/update-ride-status', authMiddleware, async (req, res) => {
+  const { rideId, status } = req.body;
+  if (!rideId || !status) return res.status(400).json({ error: 'rideId and status required' });
+  try {
+    if (useMongo) {
+      await Ride.findOneAndUpdate({ rideId }, { status });
+    } else {
+      const ride = localRides.find(r => r.rideId == rideId);
+      if (ride) ride.status = status;
+    }
+    io.emit('ride-status-update', { rideId, status });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to update status' });
+  }
+});
+
+app.post('/cancel-ride', authMiddleware, async (req, res) => {
+  const { rideId } = req.body;
+  if (!rideId) return res.status(400).json({ error: 'rideId required' });
+  try {
+    if (useMongo) {
+      await Ride.findOneAndUpdate({ rideId }, { status: 'Cancelled' });
+    } else {
+      const ride = localRides.find(r => r.rideId == rideId);
+      if (ride) ride.status = 'Cancelled';
+    }
+    io.emit('ride-status-update', { rideId, status: 'Cancelled' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to cancel ride' });
   }
 });
 
